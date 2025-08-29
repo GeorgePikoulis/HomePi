@@ -7,10 +7,9 @@ This document summarizes the steps taken to install and configure a **lightweigh
 ## 📦 Packages Installed
 ```bash
 sudo apt update
-sudo apt install -y raspberrypi-ui-mods lightdm realvnc-vnc-server realvnc-vnc-viewer
 ```
 
-Later we disabled RealVNC (X11) and switched to **WayVNC** (already shipped with Bookworm).
+None, **WayVNC** is already shipped with Bookworm.
 
 ---
 
@@ -59,8 +58,7 @@ hdmi_mode=82   # 1920x1080 @ 60Hz
 
 ## 🔑 Password Setup
 ```bash
-mkdir -p ~/.local/share/wayvnc
-wayvnc --gen-password > ~/.local/share/wayvnc/passwd
+Use the user's password
 ```
 
 ---
