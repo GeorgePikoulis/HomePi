@@ -40,7 +40,7 @@ Here’s a clean, self-contained recap of everything we set up for **checkpoint 
   sudo systemctl restart smbd
   sudo systemctl enable smbd
   ```
-  This exposes the checkpoints (read-only) to Windows as `\\rpi.local\checkpoints` (or `\\10.0.69.1\checkpoints`) so Google Drive for Windows can sync them.
+  This exposes the checkpoints (read-only) to Windows as `\\rpi.local\checkpoints` (or `\\xxx.yyy.zzz.1\checkpoints`) so Google Drive for Windows can sync them.
 - **Removed** any rclone/systemd upload units & configs (so no cloud OAuth on the Pi anymore).
 
 ## Packages added (for this workflow)
@@ -83,7 +83,7 @@ sudo e2fsck -f /dev/sda2 || true
 ```
 
 ### Windows side (to fetch/sync)
-- Map the share as a drive (e.g., `Z:`) to `\\rpi.local\checkpoints` using user **george**.
+- Map the share as a drive (e.g., `Z:`) to `\\rpi.local\checkpoints` using the local user.
 - If Google Drive won’t accept network paths directly, create a junction:
   ```powershell
   mklink /J C:\SyncCheckpoints Z:\
