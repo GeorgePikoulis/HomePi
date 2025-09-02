@@ -10,7 +10,7 @@ Here’s a clean, self-contained recap of everything we set up for **checkpoint 
   - `SHA256SUMS` (checksums for the `*.img.gz` files)
 
 ## Where checkpoints live & naming
-- Base directory: `/home/george/checkpoints/`
+- Base directory: `/home/[REDACTED USER]/checkpoints/`
 - Each run creates: `ckpt-YYYY-MM-DD_HH-MM-SS-<note>/`
   - Contains: `rootfs.img.gz`, `boot.img.gz`, `METADATA.txt`, `SHA256SUMS`
 - Local rotation: keep last **3** checkpoints by default (change with `KEEP=`)
@@ -20,23 +20,23 @@ Here’s a clean, self-contained recap of everything we set up for **checkpoint 
   - `/usr/local/sbin/make-checkpoint.sh`  ← *local-only checkpoint maker (no cloud upload)*
 - **Created earlier and removed:**
   - `/usr/local/sbin/upload-existing-checkpoints.sh` (root/system version) — **removed**
-  - `/home/george/bin/upload-existing-checkpoints.sh` (user version) — **removed**
+  - `/home/[REDACTED USER]/bin/upload-existing-checkpoints.sh` (user version) — **removed**
   - System/user timers for auto-upload — **removed**
 
 ## System file changes (to support backups & PC pull)
 - **Samba share** added to `/etc/samba/smb.conf`:
   ```ini
   [checkpoints]
-     path = /home/george/checkpoints
+     path = /home/[REDACTED USER]/checkpoints
      browseable = yes
      read only = yes
      guest ok = no
-     valid users = george
-     force user = george
+     valid users = [REDACTED USER]
+     force user = [REDACTED USER]
   ```
   Then:
   ```bash
-  sudo smbpasswd -a george
+  sudo smbpasswd -a [REDACTED USER]
   sudo systemctl restart smbd
   sudo systemctl enable smbd
   ```
@@ -61,9 +61,9 @@ sudo KEEP=5 make-checkpoint.sh pre-change
 ### One-off manual capture (equivalent to what the script does)
 ```bash
 # Rootfs (used blocks only, safe while mounted)
-sudo e2image -rap /dev/sda2 - | gzip -1 > /home/george/checkpoints/rootfs.img.gz
+sudo e2image -rap /dev/sda2 - | gzip -1 > /home/[REDACTED USER]/checkpoints/rootfs.img.gz
 # Boot (raw)
-sudo dd if=/dev/sda1 bs=1M status=progress | gzip -1 > /home/george/checkpoints/boot.img.gz
+sudo dd if=/dev/sda1 bs=1M status=progress | gzip -1 > /home/[REDACTED USER]/checkpoints/boot.img.gz
 ```
 
 ### Restore a checkpoint (from a chosen folder)
@@ -71,10 +71,10 @@ sudo dd if=/dev/sda1 bs=1M status=progress | gzip -1 > /home/george/checkpoints/
 
 ```bash
 # 1) Restore BOOT
-gunzip -c /home/george/checkpoints/ckpt-<timestamp>/boot.img.gz   | sudo dd of=/dev/sda1 bs=4M status=progress
+gunzip -c /home/[REDACTED USER]/checkpoints/ckpt-<timestamp>/boot.img.gz   | sudo dd of=/dev/sda1 bs=4M status=progress
 
 # 2) Restore ROOTFS (raw image produced by e2image -r is dd-restorable)
-gunzip -c /home/george/checkpoints/ckpt-<timestamp>/rootfs.img.gz   | sudo dd of=/dev/sda2 bs=4M status=progress
+gunzip -c /home/[REDACTED USER]/checkpoints/ckpt-<timestamp>/rootfs.img.gz   | sudo dd of=/dev/sda2 bs=4M status=progress
 
 # 3) Optional: filesystem check & (if needed) expand afterwards
 sudo e2fsck -f /dev/sda2 || true
