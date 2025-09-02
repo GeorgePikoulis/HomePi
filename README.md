@@ -1,15 +1,15 @@
 # Home Pi Docs — Index
 
 - **HomePi**  
-  `HomePi-main/README.md` (~0.1 kB, 12 words, 0 images, 0 links)
+  `HomePi-main/README.md`
 - **Raspberry Pi 5 — DNS AdBlocking (dnsmasq) — Summary**  
-  `HomePi-main/adblock/adblock.md` (~3.2 kB, 434 words, 0 images, 0 links)
+  `HomePi-main/adblock/adblock.md`
 - **Raspberry Pi Checkpoint Backup — Summary**  
-  `HomePi-main/backups/backups.md` (~3.6 kB, 530 words, 0 images, 0 links)
+  `HomePi-main/backups/backups.md`
 - **Raspberry Pi — DHCP & Connectivity**  
-  `HomePi-main/dhcp/dhcp_lan.md` (~3.8 kB, 541 words, 0 images, 0 links)
+  `HomePi-main/dhcp/dhcp_lan.md`
 - **Raspberry Pi 5 Remote Desktop (PIXEL + WayVNC) Setup**  
-  `HomePi-main/vnc/vnc.md` (~1.8 kB, 240 words, 0 images, 0 links)
+  `HomePi-main/vnc/vnc.md`
 
 ## Section previews
 
