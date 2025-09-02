@@ -1,7 +1,7 @@
 # Raspberry Pi 5 — DNS AdBlocking (dnsmasq) — Summary
 
 **Host:** `rpi` (Raspberry Pi OS)  
-**User:** `george`  
+**User:** `[REDACTED]`  
 **Purpose:** DNS-level ad blocking for LAN/WLAN, with DNS enforcement via nftables
 
 ---
