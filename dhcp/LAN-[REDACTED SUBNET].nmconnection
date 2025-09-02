@@ -1,7 +1,7 @@
-#/etc/NetworkManager/system-connections/LAN-10.0.69.nmconnection
+#/etc/NetworkManager/system-connections/LAN-[REDACTED SUBNET].nmconnection
 [connection]
-id=LAN-10.0.69
-uuid=3f3bbc57-af6a-46d9-bdd4-9d5aedc69ab7
+id=LAN-[REDACTED SUBNET]
+uuid=[REDACTED UUID]
 type=ethernet
 autoconnect-priority=10
 interface-name=eth1
@@ -11,7 +11,7 @@ wait-device-timeout=30
 [ethernet]
 
 [ipv4]
-address1=10.0.69.1/24
+address1=[REDACTED SUBNET].1/24
 method=manual
 
 [ipv6]
