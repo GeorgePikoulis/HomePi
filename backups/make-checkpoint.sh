@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ========= Settings =========
-OWNER_USER="george"
+OWNER_USER="[REDACTED USER]"
 BASE_DIR="/home/${OWNER_USER}/checkpoints"
 KEEP="${KEEP:-3}"                           # how many checkpoints to keep
 BOOT_PART="${BOOT_PART:-/dev/sda1}"         # boot (FAT)
