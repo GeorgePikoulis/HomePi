@@ -80,7 +80,7 @@
 ---
 
 ## Notes
-- dnsmasq on this host listens on the LAN IP (e.g., `[REDACTED SUBNET].1`). DHCP should hand out the Pi as DNS for clients.
+- dnsmasq on this host listens on the LAN IP (e.g., `10.0.69.1`). DHCP should hand out the Pi as DNS for clients.
 - **Reload vs Restart:**
   - `hosts.block` updates → `systemctl reload dnsmasq` is sufficient (and `clear-on-reload` flushes cache).
   - Adding/removing `address=/.../` wildcard entries → **`systemctl restart dnsmasq`** to pick up new files.
