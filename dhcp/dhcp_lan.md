@@ -53,13 +53,13 @@ journalctl -u dnsmasq -n 50 --no-pager
 
 ### 2) NetworkManager (LAN profile)
 
-Connection: `LAN-[REDACTED IP]` bound to `eth1` (USB NIC).  
+Connection: `LAN-LAN-10.0.69` bound to `eth1` (USB NIC).  
 Autoconnect & stability tweaks:
 
 ```bash
-nmcli connection modify LAN-[REDACTED IP] connection.autoconnect yes
-nmcli connection modify LAN-[REDACTED IP] connection.autoconnect-priority 10
-nmcli connection modify LAN-[REDACTED IP] connection.wait-device-timeout 30
+nmcli connection modify LAN-LAN-10.0.69 connection.autoconnect yes
+nmcli connection modify LAN-LAN-10.0.69 connection.autoconnect-priority 10
+nmcli connection modify LAN-LAN-10.0.69 connection.wait-device-timeout 30
 ```
 
 Useful checks:
@@ -73,7 +73,7 @@ ip -br addr
 The corresponding system connection file (managed by NetworkManager, reference only):
 
 ```
-/etc/NetworkManager/system-connections/LAN-[REDACTED IP].nmconnection
+/etc/NetworkManager/system-connections/LAN-LAN-10.0.69.nmconnection
 ```
 
 ---
@@ -88,7 +88,7 @@ Use only if the race persists even with the override above.
 #!/bin/bash
 set -euo pipefail
 sleep 10
-nmcli con up LAN-[REDACTED IP] || true
+nmcli con up LAN-LAN-10.0.69 || true
 systemctl restart dnsmasq || true
 ```
 
@@ -151,7 +151,7 @@ Connectivity sanity from a Windows client on the LAN:
 
 ```batch
 ipconfig /renew                :: obtain DHCP lease from the Pi
-ping [REDACTED IP]             :: Pi LAN IP
+ping 10.0.69.1                 :: Pi LAN IP
 ping 1.1.1.1                   :: raw internet (NAT check)
 ping google.com                :: DNS + connectivity
 ```
@@ -162,6 +162,6 @@ ping google.com                :: DNS + connectivity
 
 - **Root cause**: `dnsmasq` started before `eth1` was ready at boot.
 - **Resolution**: Added systemd override so `dnsmasq` starts _after_ `NetworkManager-wait-online.service` / `network-online.target`; set the LAN profile to autoconnect with priority & wait timeout.
-- **Result**: After reboot, LAN clients obtain DHCP leases on **[REDACTED IP]/24** and DNS resolves via `dnsmasq` without manual intervention.
+- **Result**: After reboot, LAN clients obtain DHCP leases on **10.0.69.0/24** and DNS resolves via `dnsmasq` without manual intervention.
 
 ---
