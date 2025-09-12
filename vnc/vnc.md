@@ -1,89 +1,105 @@
-# Raspberry Pi 5 Remote Desktop (PIXEL + WayVNC) Setup
+# Raspberry Pi VNC Setup Summary
 
-This document summarizes the steps taken to install and configure a **lightweight PIXEL desktop** with **on-demand VNC access** on Raspberry Pi OS (Bookworm).
-
----
-
-## 📦 Packages Installed
-```bash
-sudo apt update
-```
-
-None, **WayVNC** is already shipped with Bookworm.
+This document summarizes the configuration for enabling VNC access to a lightweight PIXEL desktop on Raspberry Pi.
 
 ---
 
-## 📝 System Files Created / Modified
+## Scripts / Systemd Units
 
-### 1. Systemd Target — `/etc/systemd/system/remote-desktop.target`
-```ini
-[Unit]
-Description=Remote Desktop (PIXEL + WayVNC) on-demand target
-Wants=lightdm.service wayvnc.service
-After=network-online.target
+### Created
+- **`remote-desktop.target`**  
+  A custom target to start both the PIXEL desktop session (LightDM) and WayVNC together.
 
-[Install]
-WantedBy=multi-user.target
-```
+- **`/etc/systemd/system/remote-desktop.target`**
+  ```ini
+  [Unit]
+  Description=Remote Desktop (PIXEL + VNC)
+  Requires=lightdm.service wayvnc.service
+  After=lightdm.service wayvnc.service
+  ```
 
-### 2. Drop-in for LightDM — `/etc/systemd/system/lightdm.service.d/remote.conf`
-```ini
-[Unit]
-PartOf=remote-desktop.target
-```
+- **`/etc/systemd/system/remote-desktop-start.sh`**  
+  Helper script to start the desktop + VNC.
+  ```bash
+  #!/bin/bash
+  sudo systemctl start remote-desktop.target
+  ```
 
-### 3. Drop-in for WayVNC — `/etc/systemd/system/wayvnc.service.d/remote.conf`
-```ini
-[Unit]
-PartOf=remote-desktop.target
-```
+- **`/etc/systemd/system/remote-desktop-stop.sh`**  
+  Helper script to stop the desktop + VNC.
+  ```bash
+  #!/bin/bash
+  sudo systemctl stop remote-desktop.target
+  ```
 
-### 4. WayVNC Config — `/home/george/.config/wayvnc/config`
-```ini
-address=0.0.0.0
-port=5900
-enable-auth=true
-credentials-file=/home/george/.local/share/wayvnc/passwd
-```
+### Modified
+- **`/etc/systemd/system/lightdm.service.d/remote.conf`**
+  ```ini
+  [Service]
+  ExecStart=
+  ExecStart=/usr/sbin/lightdm
+  ```
 
-### 5. Kernel HDMI Settings — `/boot/firmware/config.txt`
-(ensures headless resolution)
-```
-hdmi_force_hotplug=1
-hdmi_group=2
-hdmi_mode=82   # 1920x1080 @ 60Hz
-```
+- **`/etc/systemd/system/wayvnc.service.d/remote.conf`**
+  ```ini
+  [Service]
+  ExecStart=
+  ExecStart=/usr/sbin/wayvnc-run.sh
+  ```
 
----
-
-## 🔑 Password Setup
-```bash
-Use the user's password
-```
-
----
-
-## ▶️ Usage
-
-### Start remote desktop:
-```bash
-sudo systemctl start remote-desktop.target
-```
-
-### Stop remote desktop:
-```bash
-sudo systemctl stop remote-desktop.target
-```
-
-### Check logs if needed:
-```bash
-systemctl status wayvnc lightdm -l
-journalctl -u wayvnc -u lightdm -b --no-pager
-```
+- **`/etc/wayvnc/config`**
+  ```ini
+  address=0.0.0.0
+  port=5900
+  enable_auth=true
+  enable_pam=true
+  rsa_private_key_file=rsa_key.pem
+  private_key_file=tls_key.pem
+  certificate_file=tls_cert.pem
+  ```
 
 ---
 
-## ✅ Result
-- Lightweight **PIXEL desktop** installed.  
-- **WayVNC** configured for secure access.  
-- On-demand systemd **target** allows starting/stopping the desktop and VNC server together with a single command.  
+## System File Changes
+
+- Created drop-in directories for `lightdm.service` and `wayvnc.service` under `/etc/systemd/system/.../`.
+- Configured **PIXEL session** via LightDM (`LXDE-pi-wayfire`).
+- Adjusted **WayVNC** config to listen on port 5900 with authentication enabled.
+
+---
+
+## Packages Installed
+
+- **PIXEL Desktop Environment**  
+  (`raspberrypi-ui-mods`, `lxsession`, `lxappearance`, `lxpanel`, etc.)
+
+- **LightDM Display Manager**  
+  (`lightdm`, `pi-greeter`, `lightdm-gtk-greeter`)
+
+- **WayVNC Server**  
+  (`wayvnc`)
+
+- **Supporting tools**  
+  (`dbus-x11`, `xserver-xorg`, `policykit-1`)
+
+---
+
+## Usage
+
+- **Start remote desktop:**
+  ```bash
+  sudo systemctl start remote-desktop.target
+  ```
+
+- **Stop remote desktop:**
+  ```bash
+  sudo systemctl stop remote-desktop.target
+  ```
+
+Then connect from any VNC client (RealVNC Viewer, TigerVNC, Android/iOS apps) to:
+
+```
+<raspberrypi-ip>:5900
+```
+
+Authentication and TLS are enabled.
