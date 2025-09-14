@@ -1,0 +1,33 @@
+#/etc/NetworkManager/system-connections/IoT-10.0.72.nmconnection
+[connection]
+id=IoT-10.0.72
+uuid=9e9a53b4-9e2c-492c-9b72-0cd35954b310
+type=wifi
+autoconnect-priority=11
+interface-name=wlan0
+timestamp=1757851983
+wait-device-timeout=30
+
+[wifi]
+band=bg
+channel=6
+mode=ap
+ssid=[REDACTED]
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk=[REDACTED]
+
+[ipv4]
+address1=10.0.72.1/24
+method=manual
+never-default=true
+route-metric=600
+routing-rule1=priority 60 from 10.0.72.0/24 table 254
+routing-rule2=priority 85 from 0.0.0.0/0 iif wlan0 table 254
+
+[ipv6]
+addr-gen-mode=default
+method=disabled
+
+[proxy]

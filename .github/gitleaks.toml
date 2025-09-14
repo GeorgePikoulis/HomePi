@@ -1,0 +1,17 @@
+title = "HomePi Gitleaks allowlist"
+
+[allowlist]
+description = "Known-safe patterns present in docs"
+# Allow benign matches often flagged in docs/snippets
+regexes = [
+  '''\[REDACTED[^\]]*\]''',                       # your redaction placeholders
+  '''\blocalhost\b''',
+  '''\b127\.0\.0\.1\b''',
+  '''\b::1\b''',
+  # RFC1918 / RFC4193 private ranges
+  '''\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})\b''',
+  '''\bfc00:[0-9A-Fa-f:]+\b''',                   # IPv6 ULA (very broad but safe)
+  # Common doc/demo placeholders
+  '''\b[a-zA-Z0-9._%+\-]+@example\.(?:com|org|net)\b''',
+  '''\b(?:example|test|invalid|localdomain)\b'''
+]
