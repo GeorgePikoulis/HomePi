@@ -5,9 +5,9 @@ _Updated: 2025-09-14 13:29._
 Raspberry Pi 5 home router/AP project. Docs, configs and small scripts for a **single‑Pi home gateway**:
 
 - **WAN:** `eth0` → ISP CPE
-- **LAN (wired):** `eth1` → TL‑SG105 switch → PCs/TV/IoT hub
-- **Wi‑Fi (IoT 2.4 GHz):** `wlan0` → SSID `[REDACTED]` → `10.0.72.0/24`
-- **Wi‑Fi (Trusted 5 GHz):** `wlan1` → (planned) → `10.0.70.0/24`
+- **LAN (wired):** `eth1` → TL‑SG105 switch → `10.0.69.0/24`
+- **Wi‑Fi (IoT 2.4 GHz):** `wlan0` → `10.0.72.0/24`
+- **Wi‑Fi (Trusted 5 GHz):** `wlan1` → `10.0.70.0/24`
 - **VPN:** `tailscale0` for remote access
 - **Core services:** NetworkManager, **dnsmasq** (DHCP/DNS + AdBlock), **nftables** (FW/NAT), **CAKE** (QoS), **WayVNC**, Backups
 
@@ -20,10 +20,9 @@ Raspberry Pi 5 home router/AP project. Docs, configs and small scripts for a **
 - **AdBlock (dnsmasq) — Summary** → [`adblock/adblock.md`](adblock/adblock.md)
 - **Checkpoint Backups — Summary** → [`backups/backups.md`](backups/backups.md)
 - **DHCP & Connectivity — LAN (eth1)** → [`dhcp/dhcp_lan.md`](dhcp/dhcp_lan.md)
+- **DHCP & Connectivity — Trusted Wi‑Fi (wlan1, 5 GHz)** → [`dhcp/dhcp_trusted.md`](dhcp/dhcp_trusted.md)
 - **DHCP & Connectivity — IoT Wi‑Fi (wlan0, 2.4 GHz)** → [`dhcp/dhcp_iot.md`](dhcp/dhcp_iot.md)
 - **Remote Desktop (PIXEL + WayVNC)** → [`vnc/vnc.md`](vnc/vnc.md)
-
-> If any link still points to `HomePi-main/...`, update it to a **relative path** like `adblock/adblock.md` (this README already uses relative paths).
 
 ---
 
@@ -47,7 +46,7 @@ Raspberry Pi 5 home router/AP project. Docs, configs and small scripts for a **
            │                                        │
       wlan0│ 10.0.72.0/24 (IoT 2.4 GHz)             │  → NAT via eth0
            │  SSID: [REDACTED]                      │
-      wlan1│ 10.0.70.0/24 (Trusted 5 GHz) (planned) │
+      wlan1│ 10.0.70.0/24 (Trusted 5 GHz)           │
 ```
 
 ### Routing & Firewall (high level)
@@ -56,21 +55,6 @@ Raspberry Pi 5 home router/AP project. Docs, configs and small scripts for a **
 - **Sysctl:** `net.ipv4.ip_forward=1`; `rp_filter=0` (all/default/eth0/wlan0).
 - **QoS:** CAKE SmartQueue (configured separately).
 - **DNS:** dnsmasq on the Pi; **per‑interface DHCP options** to prevent gateway/DNS bleed between LAN/IoT; AdBlock via hosts lists.
-
----
-
-## Fast Start — IoT 2.4 GHz Wi‑Fi (wlan0)
-
-1. **NetworkManager (profile `IoT-10.0.72`)**
-   - Static `10.0.72.1/24`, `ipv4.never-default yes`, WPA2‑PSK.
-   - Add NM **routing‑rules**: `priority 60 from 10.0.72.0/24 table 254`, `priority 85 iif wlan0 table 254`.
-2. **dnsmasq** — use **interface‑scoped** lines (no global `dhcp-option`):
-   - `dhcp-range=interface:wlan0,10.0.72.50,10.0.72.199,255.255.255.0,12h`
-   - `dhcp-option=interface:wlan0,option:router,10.0.72.1`
-   - `dhcp-option=interface:wlan0,option:dns-server,10.0.72.1`
-3. **nftables** — allow `wlan0→eth0` and `masquerade` `10.0.72.0/24` out `eth0`.
-
-Full details in **[`dhcp/dhcp_iot.md`](dhcp/dhcp_iot.md)**.
 
 ---
 
@@ -86,7 +70,6 @@ Full details in **[`dhcp/dhcp_iot.md`](dhcp/dhcp_iot.md)**.
 
 ## Roadmap / TODO
 
-- **Trusted 5 GHz (wlan1)** — Multi‑SSID & guest network
 - **NordVPN as WAN uplink** (policy‑based)
 - **Samba** file server
 - **Torrent client** (remote add via magnet)
