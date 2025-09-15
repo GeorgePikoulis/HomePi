@@ -10,6 +10,7 @@ Raspberry Pi 5 home router/AP project. Docs, configs and small scripts for a **
 - **Wi‑Fi (Trusted 5 GHz):** `wlan1` → `10.0.70.0/24`
 - **VPN:** `tailscale0` for remote access
 - **Core services:** NetworkManager, **dnsmasq** (DHCP/DNS + AdBlock), **nftables** (FW/NAT), **CAKE** (QoS), **WayVNC**, Backups
+- **QoL services:** **HomeAssistant** (in progress), **Snapserver** (in progress), **Samba** (future), **NordVPN** (future), **Torrents** (future)
 
 > Hostname: `rpi` (`rpi.local`) • Main user: `[REDACTED]`
 
@@ -65,6 +66,26 @@ Raspberry Pi 5 home router/AP project. Docs, configs and small scripts for a **
 - `dhcp/` — per‑subnet DHCP/DNS docs (`dhcp_lan.md`, `dhcp_iot.md`)
 - `nftables/` — nftables configs (FW/NAT/QoS glue)
 - `vnc/` — PIXEL desktop + WayVNC units & usage
+
+---
+
+## Services
+
+### Home Assistant
+Documentation: [homeassistant/homeassistant.md](homeassistant/homeassistant.md)
+
+- Installed in Python venv at `/srv/homeassistant`
+- Config in `/home/george/.homeassistant/`
+- Runs under systemd (`home-assistant.service`)
+- Accessible via `http://rpi.local:8123` (LAN) and Tailscale IP (remote)
+
+### Snapserver
+Documentation: [snapserver/snapserver.md](snapserver/snapserver.md)
+
+- Installed from apt
+- Config in `/etc/snapserver.conf`
+- Runs under systemd (`snapserver.service`)
+- Web UI at `http://<rpi-ip>:1780`, TCP stream on port 1704
 
 ---
 
