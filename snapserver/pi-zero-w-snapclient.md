@@ -72,40 +72,50 @@ aplay -L | sed -n '1,120p'
 for p in /sys/class/sound/card*/id; do echo "$(basename "$(dirname "$p")") -> $(cat "$p")"; done
 ```
 
-### Make USB audio the stable default
-1. **Prefer USB audio** (optional; name-based addressing is already robust):
-   ```bash
-   sudo tee /etc/modprobe.d/alsa-usb-first.conf >/dev/null <<'EOF'
-   # Prefer USB audio; vc4 HDMI ordering varies, name-based ALSA routing used anyway.
-   options snd-usb-audio index=0
-   EOF
-   ```
+### Avoid ALSA index pinning (important)
 
-2. **ALSA default to USB by NAME** (not by number):
-   ```bash
-   USBCARDID="UsbAudio"    # from /sys/class/sound/card*/id
+Do **not** force `snd-usb-audio` to a fixed ALSA card index (e.g. `index=0`). On Raspberry Pi, HDMI audio often claims `card0` early; pinning USB to `0` can prevent the USB DAC from registering at all (you’ll see errors like `cannot create card instance 0 ... error: -16`), and then anything that targets `CARD=UsbAudio` will fail because the card never appears.
 
-   sudo tee /etc/asound.conf >/dev/null <<EOF
-   pcm.!default {
-     type plug
-     slave.pcm "sysdefault:CARD=${USBCARDID}"
-   }
-   ctl.!default {
-     type hw
-     card "${USBCARDID}"
-   }
-   EOF
+Instead: keep everything **name-based** (`CARD=UsbAudio`) and let ALSA assign the card numbers dynamically.
 
-   sudo alsactl init || true
-   ```
+If you ever created an override like this, **remove it**:
 
-3. **Test**:
-   ```bash
-   aplay -D "sysdefault:CARD=UsbAudio" /usr/share/sounds/alsa/Front_Center.wav
-   aplay /usr/share/sounds/alsa/Front_Center.wav
-   ```
+- `/etc/modprobe.d/alsa-usb-first.conf` containing `options snd-usb-audio index=0`
 
-> In our unit: `card0 UsbAudio` (SlrTek Usb_Audio), `card1 vc4hdmi`. We pinned by **name** and optionally nudged USB to index 0.
+Fix:
+
+```bash
+sudo rm -f /etc/modprobe.d/alsa-usb-first.conf
+sudo reboot
+```
+
+### Make USB audio the stable default (name-based)
+
+**ALSA default to USB by NAME** (not by number):
+```bash
+USBCARDID="UsbAudio"    # from /sys/class/sound/card*/id
+
+sudo tee /etc/asound.conf >/dev/null <<EOF
+pcm.!default {
+  type plug
+  slave.pcm "sysdefault:CARD=${USBCARDID}"
+}
+ctl.!default {
+  type hw
+  card "${USBCARDID}"
+}
+EOF
+
+sudo alsactl init || true
+```
+
+**Test**:
+```bash
+aplay -D "sysdefault:CARD=UsbAudio" /usr/share/sounds/alsa/Front_Center.wav
+aplay /usr/share/sounds/alsa/Front_Center.wav
+```
+
+> Card numbering can vary (`card0`, `card1`, …). This setup never depends on the number.
 
 ---
 
@@ -128,10 +138,10 @@ ExecStart=
 # Choose one of the soundcard args below:
 
 # A) Compatible (what we used in production first):
-ExecStart=/usr/bin/snapclient --player alsa --soundcard 'plughw:CARD=UsbAudio,DEV=0' --latency 200 --host 10.0.69.1
+ExecStart=/usr/bin/snapclient --player alsa --soundcard 'plughw:CARD=UsbAudio,DEV=0' --latency 200 --host rpi-media-server.local
 
 # B) Alternatively (cleaner), use the sysdefault name path:
-# ExecStart=/usr/bin/snapclient --player alsa --soundcard 'sysdefault:CARD=UsbAudio' --latency 200 --host 10.0.69.1
+# ExecStart=/usr/bin/snapclient --player alsa --soundcard 'sysdefault:CARD=UsbAudio' --latency 200 --host rpi-media-server.local
 
 # Provide a runtime dir if snapclient ever needs it
 RuntimeDirectory=snapclient
@@ -172,10 +182,10 @@ sudo alsactl store
 Server API examples:
 ```bash
 # List clients with volumes
-curl -s http://10.0.69.1:1780/jsonrpc   -H 'Content-Type: application/json'   -d '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' | jq -r '.result.server.clients[] | "\(.id)  \(.host.name)  vol=\(.config.volume.percent)% muted=\(.config.volume.muted)"'
+curl -s http://rpi-media-server.local:1780/jsonrpc   -H 'Content-Type: application/json'   -d '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' | jq -r '.result.server.clients[] | "\(.id)  \(.host.name)  vol=\(.config.volume.percent)% muted=\(.config.volume.muted)"'
 
 # Set volume (replace <CLIENT_ID>)
-curl -s http://10.0.69.1:1780/jsonrpc   -H 'Content-Type: application/json'   -d '{"id":2,"jsonrpc":"2.0","method":"Server.SetClientVolume","params":{"id":"<CLIENT_ID>","volume":{"percent":60,"muted":false}}}'
+curl -s http://rpi-media-server.local:1780/jsonrpc   -H 'Content-Type: application/json'   -d '{"id":2,"jsonrpc":"2.0","method":"Server.SetClientVolume","params":{"id":"<CLIENT_ID>","volume":{"percent":60,"muted":false}}}'
 ```
 
 ---
@@ -214,7 +224,7 @@ sync
 1. **Hostname:**
    ```bash
    sudo hostnamectl set-hostname rpi-snap-<room>
-   sudo sed -i "s/^\(127\.0\.1\.1\s*\).*/rpi-snap-<room>/" /etc/hosts
+   sudo sed -i "s/^127\.0\.1\.1.*/127.0.1.1 rpi-snap-<room>/" /etc/hosts
    ```
 
 2. **Machine ID:**
@@ -272,14 +282,14 @@ sync
 
 ## 8) Final State (our working config)
 
-- ALSA card IDs (at the time of setup):
-  - `card0: UsbAudio  (SlrTek Usb_Audio)`
-  - `card1: vc4hdmi`
+- ALSA card IDs (**example**; numbers can vary and we never pin them):
+  - `vc4hdmi` (HDMI)
+  - `UsbAudio` (USB DAC)
 - Unit override in production (first stable run):
   ```ini
   [Service]
   ExecStart=
-  ExecStart=/usr/bin/snapclient --player alsa --soundcard 'plughw:CARD=UsbAudio,DEV=0' --latency 200 --host 10.0.69.1
+  ExecStart=/usr/bin/snapclient --player alsa --soundcard 'plughw:CARD=UsbAudio,DEV=0' --latency 200 --host rpi-media-server.local
   RuntimeDirectory=snapclient
   RuntimeDirectoryMode=0755
   ```
@@ -298,10 +308,8 @@ aplay -l
 aplay -L | sed -n '1,120p'
 
 # Server: list clients & volumes
-curl -s http://10.0.69.1:1780/jsonrpc   -H 'Content-Type: application/json'   -d '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' | jq -r '.result.server.clients[] | "\(.id)  \(.host.name)  vol=\(.config.volume.percent)% muted=\(.config.volume.muted)"'
+curl -s http://rpi-media-server.local:1780/jsonrpc   -H 'Content-Type: application/json'   -d '{"id":1,"jsonrpc":"2.0","method":"Server.GetStatus"}' | jq -r '.result.server.clients[] | "\(.id)  \(.host.name)  vol=\(.config.volume.percent)% muted=\(.config.volume.muted)"'
 ```
 
 ---
 
-**Done.** Add this file under:  
-`snapserver/clients/pi-zero-w-snapclient.md` (suggested path in your repo).
